@@ -20,7 +20,7 @@ pub enum ErrorCode {
     Custom,
 }
 
-declare_id!("5HXB2HCrvizDb87ZHkmgLtNtXgojqCm5owd3L1yfGHuH");
+declare_id!("EdB4jakxsXGit5ojRshNv2bgfNNKgo6zqM5FEWiNLvtR");
 
 #[program]
 pub mod market_transfer_hook {
@@ -37,7 +37,6 @@ pub mod market_transfer_hook {
         // index 5 is address of Config account
         // index 6 is address of Bouncer list
         // index 7 is address of Token program
-        // index 8 is address of Associated Token program
         let metas = vec![
             //index 5 = config account
             ExtraAccountMeta::new_with_pubkey(
@@ -57,7 +56,7 @@ pub mod market_transfer_hook {
                 false,
             )
             .map_err(to_anchor_error_tlv)?,
-            // index 7 = bouncer_program executable
+            // index 7 = bouncer_program
             ExtraAccountMeta::new_with_pubkey(
                 &spl_tlv_account_resolution::solana_pubkey::Pubkey::new_from_array(
                     ctx.accounts.bouncer_program.key().to_bytes(),
@@ -66,7 +65,16 @@ pub mod market_transfer_hook {
                 false,
             )
             .map_err(to_anchor_error_tlv)?,
-            // // index 8 = token_program
+            // index 8 = entry_account
+            ExtraAccountMeta::new_with_pubkey(
+                &spl_tlv_account_resolution::solana_pubkey::Pubkey::new_from_array(
+                    ctx.accounts.entry_account.key().to_bytes(),
+                ),
+                false,
+                false,
+            )
+            .map_err(to_anchor_error_tlv)?,
+            // index 9 = token_program
             ExtraAccountMeta::new_with_pubkey(
                 &spl_tlv_account_resolution::solana_pubkey::Pubkey::new_from_array(
                     ctx.accounts.token_program.key().to_bytes(),
@@ -119,6 +127,7 @@ pub mod market_transfer_hook {
 
         msg!("src_owner: {}", src_owner.to_string());
         msg!("dst_owner: {}", dst_owner.to_string());
+        msg!("entry_account: {}", ctx.accounts.entry_account.key().to_string());
         msg!(
             "source_token: {}",
             ctx.accounts.source_token.key().to_string()

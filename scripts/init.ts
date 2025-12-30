@@ -48,13 +48,28 @@ import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
   // ------------------------------------------------------------
 
   // Your already-created Token-2022 mint
-  const MINT = new PublicKey("6uMMEsXVim3QvuxA2Xy5NYguyvPspE1fG8S7NC9zENWj");
+  const MINT = new PublicKey("G8rjfdEDSfEeAj1NLu3YtyXhtvo5JLGdkKaJqXEzYdwL");
 
   // Bouncer program ID (whitelist program)
   const BOUNCER_PROGRAM_ID = new PublicKey("4qn7TjxgnALkV5wjqSjeedSPx8XbacSYNKH4Gv54QEQC");
 
   // Bouncer list PDA (the whitelist)
   const BOUNCER_LIST = new PublicKey("7h7qtpFwNNgYPK68b9abbomcUoBcTVvmWC21TQWsQVn9");
+
+  // Example whitelisted PDA (used to derive entry account for initialization)
+  // This should be a PDA that exists in the whitelist
+  const EXAMPLE_WHITELISTED_PDA = new PublicKey("J8ridcz8pgJ4g9E5sk7xmjDjWD3AR5rMqXUxkrc8Zp9L");
+
+  // Helper function to derive entry PDA
+  function entryPda(
+    list: PublicKey,
+    subject: PublicKey
+  ): PublicKey {
+    return PublicKey.findProgramAddressSync(
+      [Buffer.from("entry"), list.toBuffer(), subject.toBuffer()],
+      BOUNCER_PROGRAM_ID
+    )[0];
+  }
 
   // ------------------------------------------------------------
   // PDA derivations
@@ -135,6 +150,13 @@ import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
   console.log("\nInitializing ExtraAccountMetaList...");
   console.log("This will set up the extra accounts needed for transfer hook execution.");
 
+  // Derive entry account PDA for the example whitelisted PDA
+  // Note: This is just for initialization - the actual entry account used during transfers
+  // will be dynamically derived based on the destination
+  const exampleEntryPda = entryPda(BOUNCER_LIST, EXAMPLE_WHITELISTED_PDA);
+  console.log("Example Entry PDA (for initialization):", exampleEntryPda.toBase58());
+  console.log("Example Subject (whitelisted PDA):", EXAMPLE_WHITELISTED_PDA.toBase58());
+
   try {
     const tx = await program.methods
       .initializeExtraAccountMetaList()
@@ -145,6 +167,7 @@ import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
         config: configPda,
         bouncerProgram: BOUNCER_PROGRAM_ID,
         bouncerList: BOUNCER_LIST,
+        entryAccount: exampleEntryPda,
         tokenProgram: TOKEN_2022_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })

@@ -19,6 +19,7 @@ import {
   getAccount,
   getTransferHook,
   createTransferCheckedWithTransferHookInstruction,
+  getOrCreateAssociatedTokenAccount,
 } from "@solana/spl-token";
 // Note: addExtraAccountMetasForExecute may need to be imported differently
 // For now, we'll use the transfer hook interface helpers directly
@@ -26,11 +27,11 @@ import { Bouncer } from "../target/types/bouncer";
 import { MarketTransferHook } from "../target/types/market_transfer_hook";
 
 // Constants
-const TOKEN_MINT = new PublicKey("6uMMEsXVim3QvuxA2Xy5NYguyvPspE1fG8S7NC9zENWj");
+const TOKEN_MINT = new PublicKey("G8rjfdEDSfEeAj1NLu3YtyXhtvo5JLGdkKaJqXEzYdwL");
 const BOUNCER_LIST = new PublicKey("7h7qtpFwNNgYPK68b9abbomcUoBcTVvmWC21TQWsQVn9");
 const WHITELISTED_PDA = new PublicKey("J8ridcz8pgJ4g9E5sk7xmjDjWD3AR5rMqXUxkrc8Zp9L");
 const BOUNCER_PROGRAM_ID = new PublicKey("4qn7TjxgnALkV5wjqSjeedSPx8XbacSYNKH4Gv54QEQC");
-const TRANSFER_HOOK_PROGRAM_ID = new PublicKey("5HXB2HCrvizDb87ZHkmgLtNtXgojqCm5owd3L1yfGHuH");
+const TRANSFER_HOOK_PROGRAM_ID = new PublicKey("EdB4jakxsXGit5ojRshNv2bgfNNKgo6zqM5FEWiNLvtR");
 
 describe("Transfer Hook Test", () => {
   const provider = anchor.AnchorProvider.env();
@@ -140,7 +141,7 @@ describe("Transfer Hook Test", () => {
     destinationTokenAccount = getAssociatedTokenAddressSync(
       TOKEN_MINT,
       WHITELISTED_PDA,
-      true, // allowOwnerOffCurve = true for PDA
+      true,
       TOKEN_2022_PROGRAM_ID
     );
     console.log("Destination token account (PDA):", destinationTokenAccount.toBase58());
@@ -358,13 +359,6 @@ describe("Transfer Hook Test", () => {
     // Get mint info to check decimals and transfer hook
     const mintInfo = await getMint(connection, TOKEN_MINT, undefined, TOKEN_2022_PROGRAM_ID);
     const decimals = mintInfo.decimals;
-    const transferHook = getTransferHook(mintInfo);
-    
-    if (!transferHook) {
-      throw new Error("Token does not have a transfer hook configured");
-    }
-    
-    console.log("Transfer hook program:", transferHook.programId.toBase58());
 
     // Get config PDA
     const [configPda] = PublicKey.findProgramAddressSync(
@@ -486,7 +480,6 @@ describe("Transfer Hook Test", () => {
     // Get mint decimals
     const mintInfo2 = await getMint(connection, TOKEN_MINT, undefined, TOKEN_2022_PROGRAM_ID);
     const decimals2 = mintInfo2.decimals;
-    const transferHook2 = getTransferHook(mintInfo2);
     
     const transferAmount2 = BigInt(100 * Math.pow(10, decimals2));
     console.log("Attempting transfer of", transferAmount2.toString(), "raw units (", 100, "tokens)...");

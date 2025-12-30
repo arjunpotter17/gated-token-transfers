@@ -20,6 +20,7 @@ pub struct InitializeExtraAccountMetaList<'info> {
     pub config: Account<'info, Config>,
     pub bouncer_program: Program<'info, bouncer::program::Bouncer>,
     pub bouncer_list: Account<'info, bouncer::state::List>,
+    pub entry_account: Account<'info, bouncer::state::Entry>,
     pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }
@@ -49,6 +50,7 @@ pub struct TransferHook<'info> {
     pub config: Account<'info, Config>,
     pub bouncer_list: Account<'info, bouncer::state::List>,
     pub bouncer_program: Program<'info, bouncer::program::Bouncer>,
+    pub entry_account: Account<'info, bouncer::state::Entry>,
     pub token_program: Interface<'info, TokenInterface>,
 }
 

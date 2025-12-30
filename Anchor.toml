@@ -6,11 +6,11 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-transfer_hook = "5HXB2HCrvizDb87ZHkmgLtNtXgojqCm5owd3L1yfGHuH"
+transfer_hook = "EdB4jakxsXGit5ojRshNv2bgfNNKgo6zqM5FEWiNLvtR"
 bouncer = "4qn7TjxgnALkV5wjqSjeedSPx8XbacSYNKH4Gv54QEQC"
 
 [programs.devnet]
-transfer_hook = "5HXB2HCrvizDb87ZHkmgLtNtXgojqCm5owd3L1yfGHuH"
+transfer_hook = "EdB4jakxsXGit5ojRshNv2bgfNNKgo6zqM5FEWiNLvtR"
 bouncer = "4qn7TjxgnALkV5wjqSjeedSPx8XbacSYNKH4Gv54QEQC"
 
 [registry]

@@ -24,12 +24,15 @@ pub fn check_whitelist(
         ErrorCode::TransferNotAllowed
     );
     
-    let cpi_ctx = CpiContext::new(
+    let mut cpi_ctx = CpiContext::new(
         ctx.accounts.bouncer_program.to_account_info(),
         bouncer::cpi::accounts::AssertAllowed {
             list: ctx.accounts.bouncer_list.to_account_info(),
         },
     );
+
+    // Add entry_account as remaining account
+    cpi_ctx = cpi_ctx.with_remaining_accounts(vec![ctx.accounts.entry_account.to_account_info()]);
     
     // Call bouncer and convert any error to TransferNotAllowed
     bouncer::cpi::assert_allowed(cpi_ctx, key, Vec::new())
