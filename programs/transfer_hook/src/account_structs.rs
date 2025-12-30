@@ -17,6 +17,10 @@ pub struct InitializeExtraAccountMetaList<'info> {
     pub extra_account_meta_list: AccountInfo<'info>,
 
     pub mint: InterfaceAccount<'info, Mint>,
+    pub config: Account<'info, Config>,
+    pub bouncer_program: Program<'info, bouncer::program::Bouncer>,
+    pub bouncer_list: Account<'info, bouncer::state::List>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }
 
@@ -43,7 +47,8 @@ pub struct TransferHook<'info> {
     /// CHECK: protocol config
     #[account(seeds = [b"config"], bump = config.bump)]
     pub config: Account<'info, Config>,
-
+    pub bouncer_list: Account<'info, bouncer::state::List>,
+    pub bouncer_program: Program<'info, bouncer::program::Bouncer>,
     pub token_program: Interface<'info, TokenInterface>,
 }
 
@@ -53,7 +58,7 @@ pub struct InitializeConfig<'info> {
     pub payer: Signer<'info>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = payer,
         space = 8+Config::INIT_SPACE,
         seeds = [b"config"],
@@ -71,4 +76,18 @@ pub struct UpdateConfig<'info> {
 
     #[account(seeds = [b"config"], bump = config.bump)]
     pub config: Account<'info, Config>,
+}
+
+#[derive(Accounts)]
+pub struct CloseConfig<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
+    /// CHECK: Config account to close (may have old structure, so we use UncheckedAccount)
+    #[account(
+        mut,
+        seeds = [b"config"],
+        bump
+    )]
+    pub config: UncheckedAccount<'info>,
 }

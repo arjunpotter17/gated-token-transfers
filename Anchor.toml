@@ -6,17 +6,20 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-transfer_hook = "ABaNE7SfMYnVpYPYeEt8KBEts2hY6RhrovoiA5wqzDaV"
+transfer_hook = "5HXB2HCrvizDb87ZHkmgLtNtXgojqCm5owd3L1yfGHuH"
+bouncer = "4qn7TjxgnALkV5wjqSjeedSPx8XbacSYNKH4Gv54QEQC"
 
 [programs.devnet]
-transfer_hook = "ABaNE7SfMYnVpYPYeEt8KBEts2hY6RhrovoiA5wqzDaV"
+transfer_hook = "5HXB2HCrvizDb87ZHkmgLtNtXgojqCm5owd3L1yfGHuH"
+bouncer = "4qn7TjxgnALkV5wjqSjeedSPx8XbacSYNKH4Gv54QEQC"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""
+test-transfer = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/test_transfer.ts"

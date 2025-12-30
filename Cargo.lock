@@ -437,6 +437,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bouncer"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "solana-sha256-hasher 2.3.0",
+]
+
+[[package]]
 name = "bs58"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3731,6 +3739,7 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
+ "bouncer",
  "spl-tlv-account-resolution 0.11.1",
  "spl-token-2022 10.0.0",
  "spl-transfer-hook-interface 2.1.0",

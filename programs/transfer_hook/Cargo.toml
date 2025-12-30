@@ -26,6 +26,7 @@ anchor-spl = { version = "0.32.1", features = ["metadata", "associated_token"] }
 spl-tlv-account-resolution = "0.11.1"
 spl-token-2022 = "10.0.0"
 spl-transfer-hook-interface = "2.1.0"
+bouncer = { path = "../bouncer", features = ["cpi"] }
 
 
 

@@ -3,6 +3,7 @@ import { Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
+import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 
 (async () => {
   // ------------------------------------------------------------
@@ -47,12 +48,13 @@ import * as os from "os";
   // ------------------------------------------------------------
 
   // Your already-created Token-2022 mint
-  const MINT = new PublicKey("6gESBt8umWdDmwGBR1tpYwjhdmRKVS1QK23f9SoKTSnp");
+  const MINT = new PublicKey("6uMMEsXVim3QvuxA2Xy5NYguyvPspE1fG8S7NC9zENWj");
 
-  // Your market program (owns market PDAs)
-  const MARKET_PROGRAM_ID = new PublicKey(
-    "deprZ6k7MU6w3REU6hJ2yCfnkbDvzUZaKE4Z4BuZBhU"
-  );
+  // Bouncer program ID (whitelist program)
+  const BOUNCER_PROGRAM_ID = new PublicKey("4qn7TjxgnALkV5wjqSjeedSPx8XbacSYNKH4Gv54QEQC");
+
+  // Bouncer list PDA (the whitelist)
+  const BOUNCER_LIST = new PublicKey("7h7qtpFwNNgYPK68b9abbomcUoBcTVvmWC21TQWsQVn9");
 
   // ------------------------------------------------------------
   // PDA derivations
@@ -76,43 +78,54 @@ import * as os from "os";
   console.log("ExtraAccountMetaList PDA:", extraAccountMetaListPda.toBase58());
 
   // ------------------------------------------------------------
-  // 1️⃣ Initialize config (safe to re-run once)
+  // 1️⃣ Initialize or Update config
   // ------------------------------------------------------------
 
-  console.log("\nInitializing config...");
+  console.log("\nChecking config state...");
+  console.log("Bouncer Program ID:", BOUNCER_PROGRAM_ID.toBase58());
+  console.log("Bouncer List:", BOUNCER_LIST.toBase58());
 
-  try {
-    const tx = await program.methods
-      .initializeConfig(MARKET_PROGRAM_ID)
-      .accounts({
-        payer,
-        config: configPda,
-        systemProgram: SystemProgram.programId,
-      })
-      .rpc();
+  // Check if config already exists
+  const configAccountInfo = await connection.getAccountInfo(configPda);
+  
+  if (configAccountInfo) {
+    console.log("⚠️  Config account already exists.");
+    console.log("⚠️  Attempting to update with new values...");
+    
+    try {
+      const tx = await program.methods
+        .updateConfig(BOUNCER_PROGRAM_ID, BOUNCER_LIST)
+        .accounts({
+          payer,
+          config: configPda,
+        })
+        .rpc();
 
-    console.log("Config initialized:", tx);
-  } catch (e) {
-    console.warn(
-      "Config init failed (maybe already initialized):",
-      e.toString()
-    );
-  }
+      console.log("✅ Config updated successfully:", tx);
+    } catch (e: any) {
+      console.error("❌ Config update failed:", e.toString());
+      console.error("⚠️  Config exists but update failed. This is a new program ID, so config should not exist yet.");
+      console.error("⚠️  If you see this, there might be a conflict. Exiting...");
+      process.exit(1);
+    }
+  } else {
+    // Config doesn't exist, initialize it (fresh start with new program ID)
+    console.log("\nInitializing new config...");
+    try {
+      const tx = await program.methods
+        .initializeConfig(BOUNCER_PROGRAM_ID, BOUNCER_LIST)
+        .accounts({
+          payer,
+          config: configPda,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
 
-  console.log("\nUpdating config...");
-  try {
-    const tx = await program.methods
-      .updateConfig(MARKET_PROGRAM_ID)
-      .accounts({
-        payer,
-        config: configPda,
-      })
-      .rpc();
-
-    console.log("Config updated successfully:", tx);
-  } catch (e) {
-    console.error("Config update failed:", e);
-    process.exit(1);
+      console.log("✅ Config initialized:", tx);
+    } catch (e: any) {
+      console.error("❌ Config init failed:", e.toString());
+      process.exit(1);
+    }
   }
 
   // ------------------------------------------------------------
@@ -120,22 +133,31 @@ import * as os from "os";
   // ------------------------------------------------------------
 
   console.log("\nInitializing ExtraAccountMetaList...");
+  console.log("This will set up the extra accounts needed for transfer hook execution.");
 
   try {
     const tx = await program.methods
       .initializeExtraAccountMetaList()
-      .accounts({
+      .accountsPartial({
         payer,
         mint: MINT,
         extraAccountMetaList: extraAccountMetaListPda,
+        config: configPda,
+        bouncerProgram: BOUNCER_PROGRAM_ID,
+        bouncerList: BOUNCER_LIST,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
       .rpc();
 
-    console.log("ExtraAccountMetaList initialized:", tx);
-  } catch (e) {
-    console.error("ExtraAccountMetaList init failed:", e);
-    process.exit(1);
+    console.log("✅ ExtraAccountMetaList initialized:", tx);
+  } catch (e: any) {
+    if (e.toString().includes("already in use") || e.toString().includes("AccountDiscriminatorAlreadySet")) {
+      console.warn("⚠️  ExtraAccountMetaList already initialized. Skipping...");
+    } else {
+      console.error("❌ ExtraAccountMetaList init failed:", e);
+      process.exit(1);
+    }
   }
 
   console.log("\n✅ Hook on-chain state initialized successfully");
