@@ -48,17 +48,17 @@ import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
   // ------------------------------------------------------------
 
   // Your already-created Token-2022 mint
-  const MINT = new PublicKey("G8rjfdEDSfEeAj1NLu3YtyXhtvo5JLGdkKaJqXEzYdwL");
+  const MINT = new PublicKey(process.env.TOKEN_MINT ?? "G8rjfdEDSfEeAj1NLu3YtyXhtvo5JLGdkKaJqXEzYdwL");
 
   // Bouncer program ID (whitelist program)
-  const BOUNCER_PROGRAM_ID = new PublicKey("4qn7TjxgnALkV5wjqSjeedSPx8XbacSYNKH4Gv54QEQC");
+  const BOUNCER_PROGRAM_ID = new PublicKey(process.env.BOUNCER_PROGRAM_ID ?? "4qn7TjxgnALkV5wjqSjeedSPx8XbacSYNKH4Gv54QEQC");
 
   // Bouncer list PDA (the whitelist)
-  const BOUNCER_LIST = new PublicKey("7h7qtpFwNNgYPK68b9abbomcUoBcTVvmWC21TQWsQVn9");
+  const BOUNCER_LIST = new PublicKey(process.env.BOUNCER_LIST ?? "7h7qtpFwNNgYPK68b9abbomcUoBcTVvmWC21TQWsQVn9");
 
   // Example whitelisted PDA (used to derive entry account for initialization)
   // This should be a PDA that exists in the whitelist
-  const EXAMPLE_WHITELISTED_PDA = new PublicKey("J8ridcz8pgJ4g9E5sk7xmjDjWD3AR5rMqXUxkrc8Zp9L");
+  const EXAMPLE_WHITELISTED_PDA = new PublicKey(process.env.WHITELISTED_PDA ?? "J8ridcz8pgJ4g9E5sk7xmjDjWD3AR5rMqXUxkrc8Zp9L");
 
   // Helper function to derive entry PDA
   function entryPda(

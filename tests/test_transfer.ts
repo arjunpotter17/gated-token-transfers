@@ -17,9 +17,7 @@ import {
   createMintToInstruction,
   getMint,
   getAccount,
-  getTransferHook,
   createTransferCheckedWithTransferHookInstruction,
-  getOrCreateAssociatedTokenAccount,
 } from "@solana/spl-token";
 // Note: addExtraAccountMetasForExecute may need to be imported differently
 // For now, we'll use the transfer hook interface helpers directly
@@ -27,11 +25,11 @@ import { Bouncer } from "../target/types/bouncer";
 import { MarketTransferHook } from "../target/types/market_transfer_hook";
 
 // Constants
-const TOKEN_MINT = new PublicKey("G8rjfdEDSfEeAj1NLu3YtyXhtvo5JLGdkKaJqXEzYdwL");
-const BOUNCER_LIST = new PublicKey("7h7qtpFwNNgYPK68b9abbomcUoBcTVvmWC21TQWsQVn9");
-const WHITELISTED_PDA = new PublicKey("J8ridcz8pgJ4g9E5sk7xmjDjWD3AR5rMqXUxkrc8Zp9L");
-const BOUNCER_PROGRAM_ID = new PublicKey("4qn7TjxgnALkV5wjqSjeedSPx8XbacSYNKH4Gv54QEQC");
-const TRANSFER_HOOK_PROGRAM_ID = new PublicKey("EdB4jakxsXGit5ojRshNv2bgfNNKgo6zqM5FEWiNLvtR");
+const TOKEN_MINT = new PublicKey(process.env.TOKEN_MINT ?? "G8rjfdEDSfEeAj1NLu3YtyXhtvo5JLGdkKaJqXEzYdwL");
+const BOUNCER_LIST = new PublicKey(process.env.BOUNCER_LIST ?? "7h7qtpFwNNgYPK68b9abbomcUoBcTVvmWC21TQWsQVn9");
+const WHITELISTED_PDA = new PublicKey(process.env.WHITELISTED_PDA ?? "J8ridcz8pgJ4g9E5sk7xmjDjWD3AR5rMqXUxkrc8Zp9L");
+const BOUNCER_PROGRAM_ID = new PublicKey(process.env.BOUNCER_PROGRAM_ID ?? "4qn7TjxgnALkV5wjqSjeedSPx8XbacSYNKH4Gv54QEQC");
+const TRANSFER_HOOK_PROGRAM_ID = new PublicKey(process.env.TRANSFER_HOOK_PROGRAM_ID ?? "EdB4jakxsXGit5ojRshNv2bgfNNKgo6zqM5FEWiNLvtR");
 
 describe("Transfer Hook Test", () => {
   const provider = anchor.AnchorProvider.env();
@@ -80,7 +78,7 @@ describe("Transfer Hook Test", () => {
   before(async () => {
     // Load local keypair (mint authority)
     try {
-      mintAuthority = loadKeypair("~/.config/solana/id.json");
+      mintAuthority = loadKeypair(process.env.MINT_AUTHORITY_LOCATION ?? "~/.config/solana/id.json");
       console.log("\n=== Test Setup ===");
       console.log("Mint authority:", mintAuthority.publicKey.toBase58());
     } catch (error: any) {
@@ -136,8 +134,9 @@ describe("Transfer Hook Test", () => {
       }
     }
 
-    // Get destination token account address (PDA - cannot create it ourselves)
-    // The PDA's program must create it, or it will be created on first transfer
+    // Please make sure that this token account exists. Without this, the transfer will fail.
+    // I guess its because the transfer instruction is not able to create the token account for PDA owned 
+    // ATA or because it is attached to a transfer hook.
     destinationTokenAccount = getAssociatedTokenAddressSync(
       TOKEN_MINT,
       WHITELISTED_PDA,
@@ -324,9 +323,9 @@ describe("Transfer Hook Test", () => {
     } catch (error: any) {
       if (error.name === "TokenAccountNotFoundError" || error.code === "TokenAccountNotFoundError" || error.message?.includes("TokenAccountNotFoundError")) {
         console.log("⚠ Destination token account does not exist yet");
-        console.log("⚠ Note: Creating ATA for PDA requires the PDA's program to sign");
-        console.log("⚠ The account will be created automatically on first transfer if the program supports it");
-        // Don't throw - this is expected for PDAs
+        console.log("⚠ Please make sure that this token account exists. Without this, the transfer will fail.");
+        console.log("⚠ The account will not be created automatically on first transfer.");
+        throw new Error("Destination token account does not exist. Please create it manually.");
       } else {
         console.error("Unexpected error checking destination account:", error);
         throw error;
@@ -402,7 +401,7 @@ describe("Transfer Hook Test", () => {
         connection,
         tx,
         [testKeypair],
-        { commitment: "confirmed", skipPreflight: true }
+        { commitment: "confirmed", skipPreflight: true } //true just for dev purpose 
       );
       console.log("✓ Transfer successful!");
       console.log("Transaction signature:", signature);
@@ -505,7 +504,9 @@ describe("Transfer Hook Test", () => {
         connection,
         tx2,
         [testKeypair],
-        { commitment: "confirmed" , skipPreflight: true }
+        { commitment: "confirmed" , skipPreflight: true } 
+        //preflight check skippedtrue so that we get the sig back 
+        // and can verify it failed for the right reasons on explorer
       );
       console.log("✗ Transfer should have failed but succeeded!");
       console.log("Transaction signature:", signature2);
